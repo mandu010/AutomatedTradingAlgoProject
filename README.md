@@ -15,7 +15,7 @@ Description:
     Once placed, if Order is Completed with a certain persiod, the script will start sending Trailing Info.
     If anything is there to Trail it will send Trailing Info
     If an exit was found, it will notify the same
-    It also notifies on any Failures
+    It also notifies on any Failures.
 - I will not disclose Strategy, you can read it and understand for yourself :)
 
 Disclaimer: Except for alligator.py rest code is developed by me. 
