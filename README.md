@@ -5,7 +5,7 @@ Saurabh Mandlik Personal Automated Algorithmic Trading System.
 
 Description:
 
-- This is currently deployed on my personal EC2 instance
+- This is currently deployed on my personal EC2 instance [ Red Hat Enterprise Linux ]
 - This is an Automated Algorithmic Project which searches for signal as per strategy and will place order.
 - This is a Bank Nifty Intraday Trend(Directional) following strategy.
 - The setup relies on 3 indicators: Williams Alligator, SupterTrend & PivotPoints.
