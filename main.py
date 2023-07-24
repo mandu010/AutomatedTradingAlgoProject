@@ -3,6 +3,8 @@
 Created on Tue Jan 17 23:19:13 2023
 
 @author: mandl
+Description: This project is an Intra-Day trend following algorithmic system.
+             This finds signals based on SuperTrend, Williams Alligator and Pivot Point and finds whether the intra day trend is Bullish or Bearish.
 """
 
 ## Main Script
@@ -42,17 +44,14 @@ interval = 15
 ATR = 10
 Multi = 3
 
-## Functions Start
+########## Functions Start ########## 
 class ShoonyaApiPy(NorenApi):
     def __init__(self):
         NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/', )        
         global api
         api = self
-
-## Functions End
-
 api = ShoonyaApiPy()        
-# Open the file and load the file
+# Open the credential file and load it
 with open(credFile) as f:
     data = yaml.load(f, Loader=SafeLoader)
     #print(data)
@@ -66,13 +65,16 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     filename=logFileName, 
                     filemode='a',
                     datefmt='%Y-%m-%d %H:%M:%S')
-# Functions 
+# Logging Function
 def log(msg, *args):
     logging.info(msg, *args)
     #print(msg, *args)
 def errorlog(msg1,*args):
     logging.error(msg1, *args)
     #print(msg1,*args)
+
+### Login Function
+### This is used in multiple places as it calls another class and return the login object    
 def loginFunction():
     
     #### Variables
@@ -88,18 +90,13 @@ def loginFunction():
     ATR = 10
     Multi = 3
     pattern = re.compile('|'.join(map(str, [300, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700])))
-## Functions Start
     class ShoonyaApiPy(NorenApi):
         def __init__(self):
             NorenApi.__init__(self, host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/', )        
             global api
             api = self
-            
-            ## Functions End
-
     api = ShoonyaApiPy()
-
-    with open(credFile) as f:
+    with open(credFile) as f: ###  Opening Credential File
         data = yaml.load(f, Loader=SafeLoader)
         #print(data)
         user    = data['user']
@@ -114,15 +111,16 @@ def loginFunction():
                             datefmt='%Y-%m-%d %H:%M:%S')
         login = api.login(userid=user, password=pwd, twoFA=pyotp.TOTP(TOTP).now(), vendor_code=vc, api_secret=app_key, imei=imei)        
         return api
-
+########## Functions End ########## 
+######################################## Main Code Start ######################################## 
 try:
+    ### Logging Into Broker Terminal 
     log("Main Script: Logging in Now")
     api = loginFunction()
     log('Main Script: Getting Bank Nifty Current Month Futures token and symbol')
     var = api.searchscrip('NFO', 'Bank Nifty')['values'][0]
     token = var['token']
     BnfSymbol = var['tsym']    
-#    if signalFunction.is_file_older_than_x_days(PP_path,1):
     with open(hlcPath) as f: hlc_data = f.readlines()
     inth = float(hlc_data[0].replace('\n',''))
     intl = float(hlc_data[1].replace('\n',''))
@@ -141,17 +139,18 @@ except Exception as e:
 print(PP)
 
 #### Starting to check for signals from here.      
-while datetime.now().minute not in {0, 15, 30, 45}: sleep(1)
+while datetime.now().minute not in {0, 15, 30, 45}: sleep(1) ### Synchronizing with 15th Minute of hour.
 
+### Runing Code only in between 9.15 AM and 2.45 PM, post 2.45 PM script terminates
 while ( (int(datetime.now().strftime("%H%M%S")) > int(time(9,15,00).strftime("%H%M%S")) ) and ( int(datetime.now().strftime("%H%M%S")) < int(time(14,35,00).strftime("%H%M%S")) ) ):
     try:
-        api = loginFunction()
+        api = loginFunction() 
         log("Main Script: Time Synced now at: "+str(datetime.now()))        
         strikePrice = {'Signal':'No Signal'}
         try:
-            strikePrice = signalFunction.supertrend(exchange, token, days, interval, ATR, Multi, PP, api)
+            strikePrice = signalFunction.supertrend(exchange, token, days, interval, ATR, Multi, PP, api) ### This is the place where signal is checked using signalFunction
             print(strikePrice)            
-            signalFunction.telegramBot("Alligator Setup Signal: "+re.sub("{|}|'|_", "", str(strikePrice['Signal'])))
+            signalFunction.telegramBot("Alligator Setup Signal: "+re.sub("{|}|'|_", "", str(strikePrice['Signal']))) ### Sending a Telegram message to myself intimating that script is working and signal
             log(str(strikePrice))
         except Exception as e:
             errorlog('Error while searching for signal '+str(e))
@@ -159,7 +158,7 @@ while ( (int(datetime.now().strftime("%H%M%S")) > int(time(9,15,00).strftime("%H
         
         checkPosition = 0
         if api.get_positions() != None: 
-            for i in api.get_positions(): checkPosition+=int(i['netqty']) ### Getting Live Positions Qty   
+            for i in api.get_positions(): checkPosition+=int(i['netqty']) ### Getting if any Live Positions Qty   
         if ((strikePrice['Signal'] != 'No Signal')):
             order = signalFunction.placeOrder(strikePrice['Signal'],'NFO', interval, api, strikePrice['Qty'])
             print(order)
