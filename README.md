@@ -6,7 +6,11 @@ Saurabh Mandlik Personal Automated Algorithmic Trading System.
 Description:
 
 - This is currently deployed on my personal EC2 instance [ Red Hat Enterprise Linux ]
-- This is an Automated Algorithmic Project which searches for signal as per strategy and will place order.
+- This is an Automated Algorithmic Project which :
+    1. Searches for Signal as per strategy 
+    2. Places Entry order.
+    3. Place Counter order and tracks for trailing futher
+    4. Places an Exit order in Parallel with Trailing (iii.) 
 - This is a Bank Nifty Intraday Trend(Directional) following strategy.
 - The setup relies on 3 indicators: Williams Alligator, SupterTrend & PivotPoints.
 - The setup is integrated with Telegram, it will send Notification to the user based:
